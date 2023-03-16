@@ -5,53 +5,11 @@ import socket
 from datetime import datetime,timedelta
 import gc
 
-sys.path.append("/usr/local/lib/python/dpkt-1.9.2")
-sys.path.append("/usr/local/lib/python/pypcap-1.2.3")
+# sys.path.append("/usr/local/lib/python/dpkt-1.9.2")
+# sys.path.append("/usr/local/lib/python/pypcap-1.2.3")
 import pcap
 import dpkt
 from dpkt.compat import compat_ord
-
-PCAP_DATALINK_RAW = 101
-decoders = {
-    dpkt.pcap.DLT_NULL: dpkt.loopback.Loopback,
-    dpkt.pcap.DLT_LOOP: dpkt.loopback.Loopback,
-    dpkt.pcap.DLT_LINUX_SLL: dpkt.sll.SLL,
-    dpkt.pcap.DLT_EN10MB: dpkt.ethernet.Ethernet,
-    dpkt.pcap.DLT_RAW: dpkt.ip.IP,
-    PCAP_DATALINK_RAW: dpkt.ip.IP
-}
-
-def get_pkts_from_pcaps(pcap):
-    if not pcap:
-        return None
-    
-    decoder = decoders.get(pcap.datalink())
-    pcaps = []
-    for ts, buf in pcap:
-        eth = decoder(buf)
-        
-        if pcap.datalink() == PCAP_DATALINK_RAW:
-            ipdata = eth
-        elif isinstance(eth.data, dpkt.ip.IP):
-            ipdata = eth.data
-        
-        pcaps.append(ipdata)
-    return pcaps
-
-
-def deal_pkts_from_pcap(pcapfile, callback, *args):
-    with open(pcapfile, 'rb') as f:
-        try:
-            pcap = dpkt.pcap.Reader(f)
-        except Exception as err:
-            print(err)
-            pcap = dpkt.pcapng.Reader(f)
-        
-        if not args:
-            return callback(pcap)
-        else:
-            return callback(pcap, args)
-
 
 def mac_addr(address):
     """Convert a MAC address to a readable/printable string"""
@@ -164,7 +122,7 @@ def test_sniff_by_dpkt():
 
 def test_wrpcap_by_dpkt():
     print("test_wrpcap_by_dpkt begin")
-    dpkts = sniff_by_dpkt(filter="icmp or tcp or udp", iface="any", timeout=100, count=100)
+    dpkts = sniff_by_dpkt(filter="icmp or tcp or udp", iface="any", timeout=10s0, count=100)
     pkts_save("./test_keepdata.pcap", dpkts)
     pkts_save("./test_compress.pcap", dpkts, compress=True)
     
