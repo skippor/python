@@ -9,5 +9,9 @@ install:
 
 clean:
 	rm -rf build
+	rm -rf dist
+
+test:
+	echo "nothing to do!"
 
 .PHONY: clean
