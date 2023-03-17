@@ -124,7 +124,7 @@ def test_wrpcap_by_dpkt():
     print("test_wrpcap_by_dpkt begin")
     dpkts = sniff_by_dpkt(filter="icmp or tcp or udp", iface="any", timeout=10s0, count=100)
     pkts_save("./test_keepdata.pcap", dpkts)
-    pkts_save("./test_compress.pcap", dpkts, compress=True)
+    #pkts_save("./test_compress.pcap", dpkts, compress=True)
     
     print("test_wrpcap_by_dpkt exit")
 
