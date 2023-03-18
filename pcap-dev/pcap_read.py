@@ -54,18 +54,18 @@ def pkt_extractor_by_dpkt(pkt):
     '''Extract packet by dpkt'''
 
     def inet_to_str(inet):
-    """Convert inet object to a string"""
-    try:
-        return socket.inet_ntop(socket.AF_INET, inet)
-    except ValueError:
-        return socket.inet_ntop(socket.AF_INET6, inet)
+        """Convert inet object to a string"""
+        try:
+            return socket.inet_ntop(socket.AF_INET, inet)
+        except ValueError:
+            return socket.inet_ntop(socket.AF_INET6, inet)
 
     ip = pkt
     #tm_hdr = "[%6s] " % p[0]
     tm_hdr = str(datetime.utcfromtimestamp(p[0]))
     
     if not isinstance(ip, dpkt.ip.IP):
-        printLog('[pktsdump] Non IP Packet type not supported %s\n' % ip.__class__.__name__)
+        print('[pktsdump] Non IP Packet type not supported %s\n' % ip.__class__.__name__)
         return tm_hdr, "Unknow"
     
     df = bool(ip.off & dpkt.ip.IP_DF)
@@ -89,7 +89,7 @@ def pkt_extractor_by_dpkt(pkt):
         data_hdr = "UDP: %s:%d > %s:%d ulen:%d" % (inet_to_str(ip.src), udp.sport, 
             inet_to_str(ip.dst), udp.dport, udp.ulen)
     else:
-        printLog('[pktsdump] Unsupport Protocal In Transparent Layer\n')
+        print('[pktsdump] Unsupport Protocal In Transparent Layer\n')
         data_hdr = ip_hdr
     
     return ' '.join((tm_hdr, id_hdr, data_hdr))
@@ -98,11 +98,11 @@ def test_deal_pcaps():
     def cb(pcap):
         pcaps = get_pkts_from_pcaps(pcap)
         for p in pcaps:
-            pkt_extractor_by_dpkt(p):
+            pkt_extractor_by_dpkt(p)
 
 
     deal_pkts_from_pcap("./test.pcap", cb)
 
 if __name__ == "__main__":
-    test_sniff_by_dpkt()
-    test_wrpcap_by_dpkt()
+    test_deal_pcaps()
+

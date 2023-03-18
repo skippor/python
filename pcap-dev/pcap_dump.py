@@ -29,7 +29,7 @@ def pkt_extractor_by_dpkt(p):
     tm_hdr = str(datetime.utcfromtimestamp(p[0]))
     
     if not isinstance(ip, dpkt.ip.IP):
-        printLog('[pktsdump] Non IP Packet type not supported %s\n' % ip.__class__.__name__)
+        print('[pktsdump] Non IP Packet type not supported %s\n' % ip.__class__.__name__)
         return tm_hdr, "Unknow"
     
     df = bool(ip.off & dpkt.ip.IP_DF)
@@ -53,7 +53,7 @@ def pkt_extractor_by_dpkt(p):
         data_hdr = "UDP: %s:%d > %s:%d ulen:%d" % (inet_to_str(ip.src), udp.sport, 
             inet_to_str(ip.dst), udp.dport, udp.ulen)
     else:
-        printLog('[pktsdump] Unsupport Protocal In Transparent Layer\n')
+        print('[pktsdump] Unsupport Protocal In Transparent Layer\n')
         data_hdr = ip_hdr
     
     return ' '.join((tm_hdr, id_hdr, data_hdr))
@@ -93,7 +93,7 @@ def sniff_by_dpkt(filter, iface, timeout, count, promisc=False):
             pkts.append((ptime, decode(pdata)))
             cnt = cnt + 1
     except Exception as err:
-        printLog("[pktsdump] sniff_by_dpkt failed: {0}".format(err))
+        print("[pktsdump] sniff_by_dpkt failed: {0}".format(err))
     
     return pkts
 
@@ -122,7 +122,7 @@ def test_sniff_by_dpkt():
 
 def test_wrpcap_by_dpkt():
     print("test_wrpcap_by_dpkt begin")
-    dpkts = sniff_by_dpkt(filter="icmp or tcp or udp", iface="any", timeout=10s0, count=100)
+    dpkts = sniff_by_dpkt(filter="icmp or tcp or udp", iface="any", timeout=10, count=100)
     pkts_save("./test_keepdata.pcap", dpkts)
     #pkts_save("./test_compress.pcap", dpkts, compress=True)
     
@@ -131,4 +131,4 @@ def test_wrpcap_by_dpkt():
 
 if __name__ == "__main__":
     test_sniff_by_dpkt()
-    test_wrpcap_by_dpkt()
+    # test_wrpcap_by_dpkt()
