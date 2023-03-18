@@ -22,17 +22,17 @@ decoders = {
 def get_pkts_from_pcaps(pcap):
     if not pcap:
         return None
-    
+
     decoder = decoders.get(pcap.datalink())
     pcaps = []
     for ts, buf in pcap:
         eth = decoder(buf)
-        
+
         if pcap.datalink() == PCAP_DATALINK_RAW:
             ipdata = eth
         elif isinstance(eth.data, dpkt.ip.IP):
             ipdata = eth.data
-        
+
         pcaps.append(ipdata)
     return pcaps
 
@@ -44,7 +44,7 @@ def deal_pkts_from_pcap(pcapfile, callback, *args):
         except Exception as err:
             print(err)
             pcap = dpkt.pcapng.Reader(f)
-        
+
         if not args:
             return callback(pcap)
         else:
@@ -61,24 +61,22 @@ def pkt_extractor_by_dpkt(pkt):
             return socket.inet_ntop(socket.AF_INET6, inet)
 
     ip = pkt
-    #tm_hdr = "[%6s] " % p[0]
-    tm_hdr = str(datetime.utcfromtimestamp(p[0]))
-    
+
     if not isinstance(ip, dpkt.ip.IP):
         print('[pktsdump] Non IP Packet type not supported %s\n' % ip.__class__.__name__)
-        return tm_hdr, "Unknow"
-    
-    df = bool(ip.off & dpkt.ip.IP_DF)
-    mf = bool(ip.off & dpkt.ip.IP_MF)
-    off = ip.off & dpkt.ip.IP_OFFMASK
+        return "Unknow"
+
+    df = bool(ip.offset & dpkt.ip.IP_DF)
+    mf = bool(ip.offset & dpkt.ip.IP_MF)
+    off = ip.offset & dpkt.ip.IP_OFFMASK
     ip_hdr = "IP: %s > %s  (ttl=%d DF=%d MF=%d offset=%d)" % \
         (inet_to_str(ip.src), inet_to_str(ip.dst), ip.ttl, df, mf, off)
     id_hdr = "[ip.id=%d ip.len=%d]" % (ip.id, ip.len)
-    
+
     data_hdr = "Unknow"
     if isinstance(ip.data, dpkt.icmp.ICMP):
         icmp = ip.data
-        data_hdr = "ICMP: %s > %s (type:%d code:%d id:%d)" % (inet_to_str(ip.src), 
+        data_hdr = "ICMP: %s > %s (type:%d code:%d id:%d)" % (inet_to_str(ip.src),
             inet_to_str(ip.dst), icmp.type, icmp.code, icmp.data.id)
     elif isinstance(ip.data, dpkt.tcp.TCP):
         tcp = ip.data
@@ -86,19 +84,19 @@ def pkt_extractor_by_dpkt(pkt):
             tcp.sport, inet_to_str(ip.dst), tcp.dport, tcp.seq, tcp.ack, tcp.flags, tcp.win)
     elif isinstance(ip.data, dpkt.udp.UDP):
         udp = ip.data
-        data_hdr = "UDP: %s:%d > %s:%d ulen:%d" % (inet_to_str(ip.src), udp.sport, 
+        data_hdr = "UDP: %s:%d > %s:%d ulen:%d" % (inet_to_str(ip.src), udp.sport,
             inet_to_str(ip.dst), udp.dport, udp.ulen)
     else:
         print('[pktsdump] Unsupport Protocal In Transparent Layer\n')
         data_hdr = ip_hdr
-    
-    return ' '.join((tm_hdr, id_hdr, data_hdr))
+
+    return ' '.join((id_hdr, data_hdr))
 
 def test_deal_pcaps():
     def cb(pcap):
         pcaps = get_pkts_from_pcaps(pcap)
         for p in pcaps:
-            pkt_extractor_by_dpkt(p)
+            print(pkt_extractor_by_dpkt(p))
 
 
     deal_pkts_from_pcap("./test.pcap", cb)
