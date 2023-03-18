@@ -5,8 +5,6 @@ import socket
 from datetime import datetime,timedelta
 import gc
 
-# sys.path.append("/usr/local/lib/python/dpkt-1.9.2")
-# sys.path.append("/usr/local/lib/python/pypcap-1.2.3")
 import pcap
 import dpkt
 from dpkt.compat import compat_ord
@@ -27,22 +25,22 @@ def pkt_extractor_by_dpkt(p):
     ip = p[1].data
     #tm_hdr = "[%6s] " % p[0]
     tm_hdr = str(datetime.utcfromtimestamp(p[0]))
-    
+
     if not isinstance(ip, dpkt.ip.IP):
         print('[pktsdump] Non IP Packet type not supported %s\n' % ip.__class__.__name__)
         return tm_hdr, "Unknow"
-    
+
     df = bool(ip.off & dpkt.ip.IP_DF)
     mf = bool(ip.off & dpkt.ip.IP_MF)
     off = ip.off & dpkt.ip.IP_OFFMASK
     ip_hdr = "IP: %s > %s  (ttl=%d DF=%d MF=%d offset=%d)" % \
         (inet_to_str(ip.src), inet_to_str(ip.dst), ip.ttl, df, mf, off)
     id_hdr = "[ip.id=%d ip.len=%d]" % (ip.id, ip.len)
-    
+
     data_hdr = "Unknow"
     if isinstance(ip.data, dpkt.icmp.ICMP):
         icmp = ip.data
-        data_hdr = "ICMP: %s > %s (type:%d code:%d id:%d)" % (inet_to_str(ip.src), 
+        data_hdr = "ICMP: %s > %s (type:%d code:%d id:%d)" % (inet_to_str(ip.src),
             inet_to_str(ip.dst), icmp.type, icmp.code, icmp.data.id)
     elif isinstance(ip.data, dpkt.tcp.TCP):
         tcp = ip.data
@@ -50,12 +48,12 @@ def pkt_extractor_by_dpkt(p):
             tcp.sport, inet_to_str(ip.dst), tcp.dport, tcp.seq, tcp.ack, tcp.flags, tcp.win)
     elif isinstance(ip.data, dpkt.udp.UDP):
         udp = ip.data
-        data_hdr = "UDP: %s:%d > %s:%d ulen:%d" % (inet_to_str(ip.src), udp.sport, 
+        data_hdr = "UDP: %s:%d > %s:%d ulen:%d" % (inet_to_str(ip.src), udp.sport,
             inet_to_str(ip.dst), udp.dport, udp.ulen)
     else:
         print('[pktsdump] Unsupport Protocal In Transparent Layer\n')
         data_hdr = ip_hdr
-    
+
     return ' '.join((tm_hdr, id_hdr, data_hdr))
 
 def sniff_by_dpkt(filter, iface, timeout, count, promisc=False):
@@ -63,24 +61,24 @@ def sniff_by_dpkt(filter, iface, timeout, count, promisc=False):
     def cb_sniff(ts, pkt, pkts):
         '''callback function for pcap.loop()'''
         pkts.append((ts, pkt))
-        
+
     pkts = []
     try:
         #抓包默认关闭混杂模式
-        sniffer = pcap.pcap(name=iface, promisc=promisc)
-        
+        sniffer = pcap.pcap(name=iface, promisc=promisc, immediate=True)
+
         if not filter is None:
             sniffer.setfilter(filter)
         #sniffer.loop(count, cb_sniff)
-        
-        decode = {
+
+        decoder = {
             pcap.DLT_NULL: dpkt.loopback.Loopback,
             pcap.DLT_LOOP: dpkt.loopback.Loopback,
             pcap.DLT_RAW: dpkt.ip.IP,
             pcap.DLT_LINUX_SLL: dpkt.sll.SLL,
             pcap.DLT_EN10MB: dpkt.ethernet.Ethernet
         }[sniffer.datalink()]
-        
+
         cnt = 0
         deadline = datetime.now() + timedelta(seconds=timeout)
         for ptime,pdata in sniffer:
@@ -90,11 +88,11 @@ def sniff_by_dpkt(filter, iface, timeout, count, promisc=False):
                 del sniffer
                 gc.collect()
                 break;
-            pkts.append((ptime, decode(pdata)))
+            pkts.append((ptime, decoder(pdata)))
             cnt = cnt + 1
     except Exception as err:
         print("[pktsdump] sniff_by_dpkt failed: {0}".format(err))
-    
+
     return pkts
 
 def pkts_sniff(filter, iface, timeout, count, promisc=False):
@@ -105,10 +103,10 @@ def pkts_save(filename, pkts, compress=False):
     '''save pcap data to file, which will compressed when option compress is True'''
     with open(filename,"wb") as f:
         writer = dpkt.pcap.Writer(f, linktype=dpkt.pcap.DLT_LINUX_SLL)
-        for ts,buf in pkts:
+        for ts, buf in pkts:
             if compress and (isinstance(buf.data.data, dpkt.tcp.TCP) or isinstance(buf.data.data, dpkt.udp.UDP)):
-                buf.data.data.data = ""
-        
+                buf.data.data.data = b''
+
             writer.writepkt(buf, ts=ts)
             f.flush()
 
@@ -117,15 +115,15 @@ def test_sniff_by_dpkt():
     dpkts = sniff_by_dpkt(filter="icmp", iface="any", timeout=10, count=10)
     for pkt in dpkts:
         print(pkt_extractor_by_dpkt(pkt))
-        
+
     print("test_sniff_by_dpkt exit")
 
 def test_wrpcap_by_dpkt():
     print("test_wrpcap_by_dpkt begin")
     dpkts = sniff_by_dpkt(filter="icmp or tcp or udp", iface="any", timeout=10, count=100)
     pkts_save("./test_keepdata.pcap", dpkts)
-    #pkts_save("./test_compress.pcap", dpkts, compress=True)
-    
+    pkts_save("./test_compress.pcap", dpkts, compress=True)
+
     print("test_wrpcap_by_dpkt exit")
 
 
