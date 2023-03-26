@@ -5,10 +5,10 @@ int main()
 {
     int a = 1;
     int b = 2;
-    printf("add(%d,%d)=%d\n", a,b,add(a,b));
-    printf("sub(%d,%d)=%d\n", a,b,sub(a,b));
-    printf("mul(%d,%d)=%d\n", a,b,mul(a,b));
-    printf("div(%d,%d)=%f\n", a,b,div(a,b));
-    
+    printf("add(%d,%d)=%d\n", a, b, myadd(a,b));
+    printf("sub(%d,%d)=%d\n", a, b, mysub(a,b));
+    printf("mul(%d,%d)=%d\n", a, b, mymul(a,b));
+    printf("div(%d,%d)=%f\n", a, b, mydiv(a,b));
+
     return 0;
 }
