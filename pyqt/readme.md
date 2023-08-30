@@ -22,6 +22,6 @@ pyinstaller -F main.py
 pyinstaller -F main.spec --clean
 ```
 
-## 替代可商用产品 pySide
+## 可商用替代品 pySide
 
-* https://zetcode.com/gui/pysidetutorial/
+* 用法大致与pyQt相同，教程参考```https://zetcode.com/gui/pysidetutorial/```
