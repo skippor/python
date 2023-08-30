@@ -21,3 +21,7 @@ pyuic5 example.ui -o example.py
 pyinstaller -F main.py
 pyinstaller -F main.spec --clean
 ```
+
+## 替代可商用产品 pySide
+
+* https://zetcode.com/gui/pysidetutorial/
